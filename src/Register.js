@@ -1,10 +1,11 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, use } from "react";
 import {
   faCheck,
   faTimes,
   faInfoCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "./api/axios";
 
 const USER_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
@@ -52,13 +53,31 @@ export default function Register() {
     setErrMsg("");
   }, [user, pwd, matchpwd]);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!USER_REGEX.test(user) || !PWD_REGEX.test(pwd)) {
       setErrMsg("Invalid Entry");
       return;
     }
-    setSuccess(true);
+
+    try {
+      const postOpt = {
+        headers: { "Content-Type": "application/json" },
+        withCredentioals: true,
+      };
+      const response = await axios.post(
+        "/register",
+        JSON.stringify({ user, pwd }),
+        postOpt
+      );
+      console.log(response.data);
+      setSuccess(true);
+    } catch (err) {
+      if (!err?.response) setErrMsg("No Server Response");
+      else if (err.response?.status === 409) setErrMsg("Username Taken");
+      else setErrMsg("Registration Failed");
+      errRef.current.focus();
+    }
   }
 
   return (
@@ -72,13 +91,15 @@ export default function Register() {
         </section>
       ) : (
         <section className="form-content">
-          <p
-            ref={errRef}
-            className={errMsg ? "err-msg" : "off-screen"}
-            aria-live="assertive"
-          >
-            {errMsg}
-          </p>
+          <div className="err-msg-content">
+            <p
+              ref={errRef}
+              className={errMsg ? "err-msg" : "off-screen"}
+              aria-live="assertive"
+            >
+              {errMsg}
+            </p>
+          </div>
           <h1>Register</h1>
 
           <form onSubmit={handleSubmit}>

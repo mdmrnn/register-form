@@ -45,8 +45,6 @@ export default function Register() {
 
   useEffect(() => {
     const result = PWD_REGEX.test(pwd);
-    console.log(result);
-    console.log(user);
     setValidPwd(result);
     const match = matchpwd === pwd;
     setValidMatch(match);
